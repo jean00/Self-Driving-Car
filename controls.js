@@ -7,7 +7,7 @@ class Controls {
 
     switch (type) {
       case "KEYS":
-        this.#addKeyboardListeners(); //# prima del metodo indica che è private
+        this.#addKeyboardListeners();
         break;
       case "DUMMY":
         this.forward = true;
@@ -32,7 +32,6 @@ class Controls {
           break;
       }
     };
-
     document.onkeyup = (event) => {
       switch (event.key) {
         case "ArrowLeft":

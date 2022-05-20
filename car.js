@@ -12,8 +12,11 @@ class Car {
     this.angle = 0;
     this.damaged = false;
 
+    this.useBrain = controlType == "AI";
+
     if (controlType != "DUMMY") {
       this.sensor = new Sensor(this);
+      this.brain = new NeuralNetwork([this.sensor.rayCount, 6, 4]);
     }
 
     this.controls = new Controls(controlType);
@@ -25,7 +28,22 @@ class Car {
       this.polygon = this.#createPolygon();
       this.damaged = this.#assessDamage(roadBorders, traffic);
     }
-    if (this.sensor) this.sensor.update(roadBorders, traffic);
+    if (this.sensor) {
+      this.sensor.update(roadBorders, traffic);
+
+      const offsets = this.sensor.readings.map((s) =>
+        s == null ? 0 : 1 - s.offset
+      );
+      const outputs = NeuralNetwork.feedForward(offsets, this.brain);
+      console.log(outputs);
+
+      if (this.brain) {
+        this.controls.forward = outputs[0];
+        this.controls.left = outputs[1];
+        this.controls.right = outputs[2];
+        this.controls.reverse = outputs[3];
+      }
+    }
   }
 
   #assessDamage(roadBorders, traffic) {
@@ -115,7 +133,7 @@ class Car {
     this.x -= Math.sin(this.angle) * this.speed; //moves the car
     this.y -= Math.cos(this.angle) * this.speed;
   }
-  draw(context, color) {
+  draw(context, color, drawSensor = false) {
     if (this.damaged) {
       context.fillStyle = "gray";
     } else {
@@ -127,6 +145,6 @@ class Car {
       context.lineTo(this.polygon[i].x, this.polygon[i].y);
     }
     context.fill();
-    if (this.sensor) this.sensor.draw(context);
+    if (this.sensor && drawSensor) this.sensor.draw(context);
   }
 }
